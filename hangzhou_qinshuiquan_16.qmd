@@ -1,0 +1,440 @@
+---
+title: "一图读懂杭州亲水圈！123处滨水点位遍布全域"
+subtitle: "杭州「浙里」亲水圈空间分布数据报告"
+date: today
+lang: zh
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-title: "目录"
+    toc-depth: 2
+    number-sections: false
+    embed-resources: false
+    code-fold: true
+    code-summary: "查看代码"
+    fig-width: 10
+    fig-height: 6
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r setup}
+options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
+
+pkgs <- c("tidyverse", "plotly", "scales", "htmltools")
+for (p in pkgs) {
+  if (!requireNamespace(p, quietly = TRUE)) install.packages(p)
+  library(p, character.only = TRUE)
+}
+
+# 配色
+col_district <- c(
+  "桐庐县" = "#E63946", "拱墅区" = "#457B9D", "富阳区" = "#2A9D8F",
+  "滨江区" = "#F4A261", "临平区" = "#E9C46A", "萧山区" = "#264653",
+  "临安区" = "#6A4C93", "余杭区" = "#1D7A8C", "钱塘区" = "#E76F51",
+  "上城区" = "#52B788", "建德市" = "#BC6C25", "淳安县" = "#74C2E1",
+  "西湖区" = "#F77F00"
+)
+col_type    <- c("休闲亲水" = "#457B9D", "旅游观光" = "#2A9D8F", "运动体验" = "#E63946")
+col_water   <- c("钱塘江水系" = "#E63946", "运河水系" = "#457B9D",
+                 "千岛湖-新安江水系" = "#2A9D8F", "其他水系" = "#A8C8E8")
+
+# 读取数据
+raw <- read_csv("杭州市_浙里_亲水圈信息20260201.csv",
+                show_col_types = FALSE) %>%
+  mutate(
+    # 水系分组
+    水系 = case_when(
+      str_detect(河流, "富春江|钱塘江|分水江|前溪|洋婆溪|北支江|石景源") ~ "钱塘江水系",
+      str_detect(河流, "京杭大运河|京杭运河|北塘河|上塘河|枫林港|浙大护校河|丰收湖") ~ "运河水系",
+      str_detect(河流, "千岛湖|新安江") ~ "千岛湖-新安江水系",
+      TRUE ~ "其他水系"
+    ),
+    # 类型大类
+    类型大类 = case_when(
+      类型 %in% c("亲水平台","滨水广场","游步道","配套设施") ~ "休闲亲水",
+      类型 %in% c("乡村旅游","旅游风景区","摄影","文化研学","康养度假") ~ "旅游观光",
+      类型 %in% c("水上游线","漂流","游泳","垂钓","骑行","露营",
+                   "亲水堰坝","产业园区") ~ "运动体验",
+      TRUE ~ "其他"
+    )
+  )
+```
+
+---
+
+## 前言
+
+<div style="background:linear-gradient(135deg,#1D3557,#2A9D8F);color:white;padding:2rem 2.5rem;border-radius:12px;margin:1.5rem 0;line-height:2.0;">
+<p style="margin:0;font-size:1.08rem;">
+杭州，因水而生，因水而兴。从西湖到钱塘江，从京杭大运河到千岛湖，水始终是这座城市最深沉的文化基因。
+</p>
+<p style="margin:1rem 0 0;font-size:1.08rem;">
+2026年，杭州市数据开放平台正式上线 <strong>123 处亲水圈点位</strong>，覆盖全市 13 个区县，串联钱塘江、运河、千岛湖三大水系。这是一张城市滨水资源的公开清单，也是一次从"治水"迈向"亲水"的公共服务宣言。
+</p>
+<p style="margin:1rem 0 0;font-size:1.08rem;">
+这份报告基于该数据集，从空间布局、类型结构、业态特征三个维度，拆解杭州亲水圈的隐藏格局——哪里最密集？哪种玩法最受规划青睐？城与野之间，亲水资源如何分配？
+</p>
+<p style="margin:1.2rem 0 0;font-size:0.88rem;opacity:0.75;">
+数据来源：杭州市"浙里"亲水圈信息（2026年2月1日）｜ 共 123 条有效记录
+</p>
+</div>
+
+---
+
+## 开篇 · 核心数据速览 {#sec-overview}
+
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin:1.5rem 0;">
+<div style="background:#EEF4FB;border-radius:10px;padding:1.2rem;text-align:center;">
+<div style="font-size:2.2rem;font-weight:700;color:#1D3557;">123</div>
+<div style="font-size:0.88rem;color:#555;margin-top:4px;">亲水圈总数</div>
+</div>
+<div style="background:#E8FAF5;border-radius:10px;padding:1.2rem;text-align:center;">
+<div style="font-size:2.2rem;font-weight:700;color:#2A9D8F;">13</div>
+<div style="font-size:0.88rem;color:#555;margin-top:4px;">覆盖区县数</div>
+</div>
+<div style="background:#FFF4EE;border-radius:10px;padding:1.2rem;text-align:center;">
+<div style="font-size:2.2rem;font-weight:700;color:#E63946;">17</div>
+<div style="font-size:0.88rem;color:#555;margin-top:4px;">亲水圈类型</div>
+</div>
+<div style="background:#FFF8E8;border-radius:10px;padding:1.2rem;text-align:center;">
+<div style="font-size:2.2rem;font-weight:700;color:#F4A261;">59%</div>
+<div style="font-size:0.88rem;color:#555;margin-top:4px;">休闲亲水占比</div>
+</div>
+</div>
+
+### 亲水圈交互地图
+
+> 123 处点位全域分布，点击标记查看名称、区县、河流与类型信息。
+
+<iframe src="03_杭州市亲水圈交互地图.html"
+        width="100%" height="580px"
+        style="border:none;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,0.08);"
+        scrolling="no">
+</iframe>
+
+---
+
+## 第一章 · 全域覆盖：13个区县的亲水资源如何布局？ {#sec-ch1}
+
+<div style="background:#f0f6ff;border-left:4px solid #457B9D;padding:0.8rem 1.2rem;border-radius:0 8px 8px 0;margin-bottom:1.5rem;font-size:0.9rem;color:#444;">
+📐 <strong>计算指标</strong>：各区县点位数量（绝对值）；水系归属分类（按主干河流名称关键词匹配）；区县点位密度 = 点位数 ÷ 全市总点位数 × 100%
+</div>
+
+### 1-1 各区县亲水圈数量分布
+
+```{r ch1-district}
+district_df <- raw %>%
+  count(区县, 类型大类) %>%
+  group_by(区县) %>%
+  mutate(总数 = sum(n)) %>%
+  ungroup() %>%
+  mutate(区县 = fct_reorder(区县, 总数))
+
+# 单独准备标签数据
+label_df <- district_df %>% distinct(区县, 总数)
+
+p1 <- ggplot(district_df,
+             aes(x = n, y = 区县, fill = 类型大类,
+                 text = paste0("<b>", 区县, " · ", 类型大类, "</b><br>",
+                               "数量：", n, " 处"))) +
+  geom_col(width = 0.7, color = "white", linewidth = 0.3) +
+  geom_text(data = label_df,
+            aes(x = 总数 + 0.3, y = 区县,
+                label = paste0(总数, " 处"),
+                fill = NULL, text = NULL),
+            inherit.aes = FALSE,
+            hjust = 0, size = 3.2, color = "grey30") +
+  scale_fill_manual(values = col_type, name = "") +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.28))) +
+  labs(x = "亲水圈数量（处）", y = NULL,
+       caption = "数据来源：杭州市浙里亲水圈信息（2026.02）") +
+  theme_minimal() +
+  theme(legend.position    = "top",
+        legend.title       = element_blank(),
+        panel.grid.minor   = element_blank(),
+        panel.grid.major.y = element_blank())
+
+ggplotly(p1, tooltip = "text") %>%
+  layout(legend = list(orientation = "h", x = 0, y = -0.12,
+                       title = list(text = "")))
+```
+
+**各区县点位数量高度均衡**，多数区县分配 9—10 处，体现了规划层面的"普惠导向"。上城区、拱墅区、滨江区、钱塘区以休闲亲水为主，而桐庐县、建德市、临安区则旅游观光与运动体验比例更高。
+
+### 1-2 三大水系点位分布
+
+```{r ch1-water}
+water_df <- raw %>%
+  count(水系, 区县) %>%
+  group_by(水系) %>%
+  mutate(水系总数 = sum(n)) %>%
+  ungroup() %>%
+  mutate(水系 = fct_reorder(水系, 水系总数))
+
+p1b <- ggplot(water_df,
+              aes(x = n, y = 水系, fill = 区县,
+                  text = paste0("<b>", 水系, " · ", 区县, "</b><br>",
+                                "数量：", n, " 处"))) +
+  geom_col(width = 0.6, color = "white", linewidth = 0.3) +
+  scale_fill_manual(values = col_district, name = "区县") +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.12))) +
+  labs(x = "亲水圈数量（处）", y = NULL,
+       caption = "水系分类依据主干河流名称关键词匹配") +
+  theme_minimal() +
+  theme(legend.position    = "top",
+        panel.grid.minor   = element_blank(),
+        panel.grid.major.y = element_blank())
+
+ggplotly(p1b, tooltip = "text") %>%
+  layout(legend = list(orientation = "h", x = 0, y = 1.15,
+                       traceorder = "normal"))
+```
+
+**其他水系（78处）** 分布于各区县的中小河道与湖泊；**运河水系（24处）** 集中在主城区拱墅、临平等沿运河区县；**钱塘江水系（17处）** 则以富春江段的桐庐、富阳为核心；**千岛湖-新安江水系（4处）** 点位最少，但景观价值最高。
+
+---
+
+## 第二章 · 类型解读：123处亲水圈的"玩法"分布 {#sec-ch2}
+
+<div style="background:#f0faf7;border-left:4px solid #2A9D8F;padding:0.8rem 1.2rem;border-radius:0 8px 8px 0;margin-bottom:1.5rem;font-size:0.9rem;color:#444;">
+📐 <strong>计算指标</strong>：各类型点位绝对数量；类型大类占比 = 该大类数量 ÷ 总点位数 × 100%；各区县类型结构 = 各类型数 ÷ 该区县总数 × 100%
+</div>
+
+### 2-1 亲水圈细分类型全景
+
+```{r ch2-type-bar}
+type_df <- raw %>%
+  count(类型, 类型大类) %>%
+  mutate(类型 = fct_reorder(类型, n),
+         hover = paste0("<b>", 类型, "</b><br>",
+                        "大类：", 类型大类, "<br>",
+                        "数量：", n, " 处<br>",
+                        "占比：", percent(n/sum(n), 0.1)))
+
+p2a <- ggplot(type_df,
+              aes(x = n, y = 类型, fill = 类型大类, text = hover)) +
+  geom_col(width = 0.7) +
+  geom_text(data = type_df %>% group_by(类型) %>% summarise(n = sum(n)),
+            aes(x = n + 0.4, y = 类型, label = n),
+            hjust = 0, size = 3.2, color = "grey30",
+            inherit.aes = FALSE) +
+  scale_fill_manual(values = col_type, name = "") +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.22))) +
+  labs(x = "数量（处）", y = NULL) +
+  theme_minimal() +
+  theme(legend.position    = "top",
+        legend.title       = element_blank(),
+        panel.grid.minor   = element_blank(),
+        panel.grid.major.y = element_blank())
+
+ggplotly(p2a, tooltip = "text") %>%
+  layout(legend = list(orientation = "h", x = 0, y = -0.12,
+                       title = list(text = "")),
+         title  = list(text = "17 种亲水类型分布",
+                       x = 0.05, font = list(size = 13)))
+```
+
+### 2-2 三大类型占比饼图
+
+```{r ch2-pie}
+bigtype_df <- raw %>%
+  count(类型大类) %>%
+  mutate(pct = n / sum(n))
+
+plot_ly(bigtype_df,
+        labels = ~类型大类, values = ~n,
+        type   = "pie",
+        marker = list(colors = c("#457B9D","#E63946","#2A9D8F")),
+        textinfo = "label+percent",
+        hovertemplate = "%{label}<br>数量：%{value} 处<br>占比：%{percent}<extra></extra>") %>%
+  layout(showlegend = FALSE,
+         title = list(text = "亲水圈三大类型占比",
+                      font = list(size = 14), x = 0.5))
+```
+
+**休闲亲水（73处，59%）** 是绝对主体，亲水平台、游步道、滨水广场是最普遍的规划形态；**旅游观光（32处，26%）** 以乡村旅游和风景区为核心，集中在郊区县；**运动体验（18处，15%）** 是占比最小但最具活力的类型，涵盖漂流、露营、骑行等新兴业态。
+
+### 2-3 各区县类型结构热力图
+
+```{r ch2-heatmap}
+heatmap_df <- raw %>%
+  count(区县, 类型大类) %>%
+  group_by(区县) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup()
+
+p2c <- ggplot(heatmap_df,
+              aes(x = 类型大类, y = 区县, fill = pct,
+                  text = paste0("<b>", 区县, " · ", 类型大类, "</b><br>",
+                                "数量：", n, " 处<br>",
+                                "占比：", percent(pct, 1)))) +
+  geom_tile(color = "white", linewidth = 0.8) +
+  geom_text(aes(label = percent(pct, 1)),
+            size = 3, color = "white", fontface = "bold") +
+  scale_fill_gradient(low = "#C8E0F4", high = "#1D3557",
+                      name = "占比", labels = label_percent()) +
+  labs(x = NULL, y = NULL,
+       caption = "颜色深浅代表该类型在区县内的占比") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        legend.position = "right")
+
+ggplotly(p2c, tooltip = "text") %>%
+  layout(title = list(text = "各区县亲水类型结构（占比热力图）",
+                      x = 0.05, font = list(size = 13)))
+```
+
+上城区、滨江区、钱塘区、拱墅区休闲亲水占比达 **100%**，属于纯粹的城市亲水空间；桐庐县旅游观光占比最高，反映其生态旅游定位；富阳区运动体验比例领先，是全市漂流、骑行资源最集中的区域。
+
+---
+
+## 第三章 · 城郊分工：主城散步、郊县露营，一条条河流串起不同“亲水体验” {#sec-ch3}
+
+<div style="background:#fff8f0;border-left:4px solid #F4A261;padding:0.8rem 1.2rem;border-radius:0 8px 8px 0;margin-bottom:1.5rem;font-size:0.9rem;color:#444;">
+📐 <strong>计算指标</strong>：城区（主城 8 区）vs 郊县（5 区县）点位数量对比；新兴业态（露营/骑行/漂流/垂钓）占比；各河流点位集中度 = 单条河流点位数 ÷ 总点位数 × 100%
+</div>
+
+### 3-1 城区 vs 郊县亲水资源对比
+
+```{r ch3-urban-rural}
+urban_districts <- c("上城区","拱墅区","滨江区","临平区","萧山区","余杭区","钱塘区","西湖区")
+
+urban_df <- raw %>%
+  mutate(城郊 = ifelse(区县 %in% urban_districts, "主城区（8区）", "郊区县（5县市）")) %>%
+  count(城郊, 类型大类) %>%
+  group_by(城郊) %>%
+  mutate(pct = n / sum(n),
+         总数 = sum(n)) %>%
+  ungroup()
+
+p3a <- ggplot(urban_df,
+              aes(x = 城郊, y = pct, fill = 类型大类,
+                  text = paste0("<b>", 城郊, " · ", 类型大类, "</b><br>",
+                                "数量：", n, " 处<br>",
+                                "占比：", percent(pct, 1)))) +
+  geom_col(width = 0.55, color = "white", linewidth = 0.4) +
+  geom_text(aes(label = ifelse(pct > 0.05, percent(pct, 1), "")),
+            position = position_stack(vjust = 0.5),
+            size = 3.5, color = "white", fontface = "bold") +
+  scale_fill_manual(values = col_type, name = "") +
+  scale_y_continuous(labels = label_percent(),
+                     expand = expansion(mult = c(0, 0.02))) +
+  labs(x = NULL, y = "占比",
+       caption = "主城区：上城、拱墅、滨江、临平、萧山、余杭、钱塘、西湖") +
+  theme_minimal() +
+  theme(legend.position    = "top",
+        legend.title       = element_blank(),
+        panel.grid.minor   = element_blank(),
+        panel.grid.major.x = element_blank())
+
+ggplotly(p3a, tooltip = "text") %>%
+  layout(legend = list(orientation = "h", x = 0, y = -0.12,
+                       title = list(text = "")),
+         title  = list(text = "主城区 vs 郊区县亲水类型结构对比",
+                       x = 0.05, font = list(size = 13)))
+```
+
+### 3-2 新兴业态分布
+
+```{r ch3-new-type}
+new_types <- c("露营","骑行","漂流","垂钓","水上游线","康养度假")
+
+new_df <- raw %>%
+  filter(类型 %in% new_types) %>%
+  count(类型, 区县) %>%
+  mutate(类型 = fct_reorder(类型, n, sum))
+
+p3b <- ggplot(new_df,
+              aes(x = n, y = 类型, fill = 区县,
+                  text = paste0("<b>", 类型, " · ", 区县, "</b><br>",
+                                "数量：", n, " 处"))) +
+  geom_col(width = 0.65, color = "white", linewidth = 0.3) +
+  scale_fill_manual(values = col_district, name = "区县") +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.15)),
+                     breaks = scales::breaks_pretty()) +
+  labs(x = "数量（处）", y = NULL,
+       caption = "新兴业态 = 露营、骑行、漂流、垂钓、水上游线、康养度假") +
+  theme_minimal() +
+  theme(legend.position    = "bottom",
+        legend.title       = element_blank(),
+        panel.grid.minor   = element_blank(),
+        panel.grid.major.y = element_blank())
+
+ggplotly(p3b, tooltip = "text") %>%
+  layout(legend = list(orientation = "h", x = 0, y = -0.15,
+                       title = list(text = "")),
+         title  = list(text = "新兴亲水业态区县分布",
+                       x = 0.05, font = list(size = 13)))
+```
+
+### 3-3 主要河流点位集中度
+
+```{r ch3-river}
+river_df <- raw %>%
+  count(河流, 水系) %>%
+  filter(n >= 2) %>%
+  mutate(河流 = fct_reorder(河流, n),
+         pct  = n / nrow(raw),
+         hover = paste0("<b>", 河流, "</b><br>",
+                        "水系：", 水系, "<br>",
+                        "点位数：", n, " 处<br>",
+                        "集中度：", percent(pct, 0.1)))
+
+# 直接用 plotly 绘制，避免 ggplotly 转换导致标签位置偏移
+plot_ly(river_df,
+        x = ~n, y = ~河流, color = ~水系,
+        colors = c("钱塘江水系" = "#E63946", "运河水系" = "#457B9D",
+                   "千岛湖-新安江水系" = "#2A9D8F", "其他水系" = "#A8C8E8"),
+        type = "bar", orientation = "h",
+        text = ~hover, hoverinfo = "text",
+        textposition = "none") %>%
+  layout(
+    barmode = "stack",
+    xaxis   = list(title = ""),
+    yaxis   = list(title = ""),
+    legend  = list(orientation = "h", x = 0, y = -0.12,
+                   title = list(text = "")),
+    title   = list(text = "主要河流亲水圈点位集中度",
+                   x = 0.05, font = list(size = 13)),
+    annotations = list(
+      list(x = 1, y = 1.08, text = "单位：点位数量（处）",
+           xref = "paper", yref = "paper",
+           showarrow = FALSE, xanchor = "right",
+           font = list(size = 11, color = "grey50"))
+    )
+  )
+```
+
+<br>
+
+**富春江（7处）** 是单条河流点位最密集的水道，依托桐庐、富阳段的生态优势；**京杭大运河（5处）与北塘河（5处）** 是城区亲水的主要载体，服务高密度居住人群。城郊分工鲜明：主城依托运河网络提供社区级亲水空间，郊县则以自然江河承载旅游体验功能。
+
+---
+
+## 结语
+
+<div style="background:linear-gradient(135deg,#1D3557,#2A9D8F);color:white;padding:2rem 2.5rem;border-radius:12px;margin:1.5rem 0 0;line-height:2.0;">
+<p style="margin:0;font-size:1.08rem;">
+从数据看杭州亲水圈，有三个清晰的结论：
+</p>
+<p style="margin:1rem 0 0;font-size:1.05rem;">
+<strong>第一，普惠是底色。</strong>123处点位均匀分布在13个区县，无论主城还是郊县，每个区域都获得了相近数量的亲水资源配置，这是公共服务均等化的空间体现。
+</p>
+<p style="margin:0.8rem 0 0;font-size:1.05rem;">
+<strong>第二，休闲是主调。</strong>59%的亲水圈以亲水平台、游步道、滨水广场为主，面向的是日常散步、遛娃、休闲的普通市民，而非专程打卡的游客。
+</p>
+<p style="margin:0.8rem 0 0;font-size:1.05rem;">
+<strong>第三，城郊有分工。</strong>主城区依托运河网络构建社区级亲水空间，郊区县则以钱塘江、千岛湖为依托，发展旅游观光与运动体验——这是一张兼顾日常生活与休闲消费的完整亲水地图。
+</p>
+<p style="margin:1.2rem 0 0;font-size:0.9rem;">
+123处坐标点为我们画出了杭州亲水圈的三条轮廓线：普惠——各区县点位高度均衡，无论主城郊县，亲水不偏心；日常——近六成亲水圈是为散步、遛娃、慢跑而建，水岸属于每一个普通市民；分工——主城有运河绿道，郊县有漂流露营，一张水网同时织补了生活与远方。
+从“治水”到“亲水”，杭州用123个答案，回答了“城市如何与水共处”的时代命题。
+</p>
+<p style="margin:1rem 0 0;font-size:0.82rem;opacity:0.7;">
+数据来源：杭州市"浙里"亲水圈信息（2026年2月1日）｜ 制作工具：R · Quarto · plotly · leaflet
+</p>
+</div>
